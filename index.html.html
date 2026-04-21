@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serial Cheaters</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #00cccc;
+    --red-bright: #00ffff;
+    --red-glow: #00ffff88;
+    --bg: #050508;
+    --surface: #0c0c12;
+    --border: #001a1a;
+    --text: #e8e8e8;
+    --muted: #667;
+    --code-bg: #07070d;
+    --gold: #c9a84c;
+    --gold-bright: #f0c060;
+    --gold-glow: #f0c06055;
+    --gold-border: #3a2800;
+  }
+
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; overflow-x: hidden; }
+
+  /* ── HERO ── */
+  #hero {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #bg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.35;
+    z-index: 0;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 15%, #050508dd 75%);
+    z-index: 1;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .hero-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(2.8rem, 8vw, 7rem);
+    font-weight: 900;
+    color: var(--red-bright);
+    text-shadow:
+      0 0 10px #00ffff,
+      0 0 30px var(--red-glow),
+      0 0 70px var(--red-glow),
+      0 0 140px #00ffff33,
+      2px 2px 0 #003333,
+      4px 4px 0 #002222;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    cursor: default;
+    word-break: break-word;
+    padding: 0 0.5rem;
+    transition: all 0.3s ease;
+    animation: flicker 6s infinite;
+  }
+
+  .hero-title:hover {
+    text-shadow:
+      0 0 10px #00ffff,
+      0 0 40px #00ffff,
+      0 0 90px var(--red-glow),
+      0 0 180px #00ffff44,
+      0 0 260px #00ffff22,
+      2px 2px 0 #004444,
+      5px 5px 0 #003333;
+    transform: scale(1.04) skewX(-1deg);
+    color: #66ffff;
+  }
+
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.85; }
+    97% { opacity: 1; }
+    98% { opacity: 0.7; }
+    99% { opacity: 1; }
+  }
+
+  .hero-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .btn-experiments {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.9rem 2.4rem;
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.95rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-experiments::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--red);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: -1;
+  }
+
+  .btn-experiments:hover::before { transform: translateX(0); }
+  .btn-experiments:hover { color: #fff; border-color: var(--red-bright); box-shadow: 0 0 20px var(--red-glow); }
+
+  /* ── EXPERIMENTS DRAWER ── */
+  #exp-drawer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #000000cc;
+    backdrop-filter: blur(6px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  #exp-drawer.open { display: flex; align-items: center; justify-content: center; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .drawer-panel {
+    background: var(--surface);
+    border: 1px solid var(--gold-border);
+    width: min(420px, 92vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 2rem;
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes slideUpSheet { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--gold-border);
+    padding-bottom: 1rem;
+  }
+
+  .drawer-header h2 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.1rem;
+    color: var(--gold-bright);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 12px var(--gold-glow);
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .close-btn:hover { color: var(--red-bright); }
+
+  .exp-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .exp-list li button {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 1px solid #1a1a1a;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.88rem;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .exp-list li button .exp-num {
+    color: var(--gold);
+    min-width: 2.5ch;
+    font-size: 0.75rem;
+  }
+
+  .exp-list li button:hover {
+    border-color: var(--gold);
+    color: var(--gold-bright);
+    background: #1a0f00;
+    box-shadow: inset 3px 0 0 var(--gold);
+  }
+
+  /* ── EXP PAGE ── */
+  #exp-page {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg);
+    overflow-y: auto;
+    animation: fadeIn 0.2s ease;
+  }
+
+  #exp-page.open { display: block; }
+
+  .exp-topbar {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--gold-border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 10;
+  }
+
+  .back-btn {
+    background: none;
+    border: 1px solid var(--gold-border);
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+  }
+  .back-btn:hover { border-color: var(--gold); color: var(--gold-bright); }
+
+  .exp-topbar h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.95rem;
+    color: var(--gold-bright);
+    text-shadow: 0 0 10px var(--gold-glow);
+    flex: 1;
+  }
+
+  .exp-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  .exp-body h2 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.85rem;
+    color: var(--gold-bright);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 2rem 0 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--gold-border);
+    text-shadow: 0 0 8px var(--gold-glow);
+  }
+
+  .exp-body p, .exp-body li {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: #bbb;
+    margin-bottom: 0.4rem;
+  }
+
+  .exp-body ul { padding-left: 1.2rem; margin-bottom: 0.8rem; }
+
+  .code-block {
+    position: relative;
+    margin: 1rem 0;
+    background: var(--code-bg);
+    border: 1px solid #1a1000;
+    border-left: 3px solid var(--gold);
+  }
+
+  .code-block pre {
+    padding: 1.2rem 1rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: #d4d4d4;
+    white-space: pre;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: #100a00;
+    border: 1px solid var(--gold-border);
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .copy-btn:hover { border-color: var(--gold); color: var(--gold-bright); }
+  .copy-btn.copied { border-color: #00aa44; color: #00cc55; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+  /* ── SUBJECT CARDS ── */
+  .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+  .subject-card {
+    background: #0d0d08;
+    border: 1px solid var(--gold-border);
+    padding: 1.4rem 1rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .subject-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1a0f0000, #1a0f0088);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .subject-card:hover { border-color: var(--gold-bright); transform: translateY(-3px); box-shadow: 0 6px 24px var(--gold-glow), inset 0 0 0 1px var(--gold); }
+  .subject-card:hover::before { opacity: 1; }
+
+  .subject-card .s-icon { font-size: 1.8rem; margin-bottom: 0.6rem; display: block; }
+
+  .subject-card .s-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.68rem;
+    color: var(--gold-bright);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 8px var(--gold-glow);
+    line-height: 1.4;
+    position: relative;
+  }
+
+  .subject-card .s-count {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* back arrow in exp list header */
+  .drawer-back {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0 0.3rem 0 0;
+    transition: color 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .drawer-back:hover { color: var(--gold-bright); }
+
+  /* ── MOBILE ── */
+  @media (max-width: 600px) {
+    .hero-title {
+      font-size: clamp(1.9rem, 12.5vw, 3rem);
+      letter-spacing: 0.01em;
+      line-height: 1.18;
+      padding: 0 0.8rem;
+    }
+    .hero-title:hover { transform: none; }
+    .hero-content { gap: 1.6rem; padding: 0 1rem; width: 100%; }
+    .hero-sub { font-size: 0.68rem; letter-spacing: 0.18em; }
+    .btn-experiments { padding: 0.85rem 1.6rem; font-size: 0.8rem; letter-spacing: 0.1em; min-height: 48px; }
+
+    /* drawer slides up from bottom */
+    #exp-drawer.open { align-items: flex-end; }
+    .drawer-panel {
+      width: 100vw;
+      max-height: 88vh;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      padding: 1.4rem 1rem 2rem;
+      animation-name: slideUpSheet;
+    }
+    .subject-grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .subject-card { padding: 1.1rem 0.6rem; }
+    .subject-card .s-icon { font-size: 1.5rem; }
+    .subject-card .s-name { font-size: 0.6rem; }
+    .drawer-header h2 { font-size: 0.92rem; }
+    .exp-list li button { font-size: 0.8rem; padding: 0.9rem 0.75rem; min-height: 48px; line-height: 1.4; }
+
+    /* exp page */
+    .exp-topbar { padding: 0.7rem 0.9rem; flex-wrap: wrap; gap: 0.4rem; }
+    .exp-topbar h1 { font-size: 0.68rem; width: 100%; text-align: center; padding-top: 0.2rem; order: 1; }
+    .back-btn { order: 0; font-size: 0.72rem; min-height: 36px; padding: 0.35rem 0.9rem; }
+    .exp-body { padding: 1.2rem 0.9rem 5rem; }
+    .exp-body h2 { font-size: 0.68rem; letter-spacing: 0.08em; margin-top: 1.6rem; }
+    .exp-body p, .exp-body li { font-size: 0.8rem; line-height: 1.72; }
+    .code-block pre { font-size: 0.68rem; padding: 2.8rem 0.75rem 0.9rem; line-height: 1.55; }
+    .copy-btn { font-size: 0.62rem; padding: 0.28rem 0.55rem; top: 0.4rem; right: 0.4rem; }
+  }
+
+  @media (hover: none) {
+    .btn-experiments::before { display: none; }
+    .btn-experiments:active { background: var(--red); color: #050508; }
+    .subject-card:active { border-color: var(--gold-bright); background: #1a0f00; }
+    .exp-list li button:active { background: #1a0f00; border-color: var(--gold); color: var(--gold-bright); box-shadow: inset 3px 0 0 var(--gold); }
+    .back-btn:active { border-color: var(--gold); color: var(--gold-bright); }
+    .copy-btn:active { border-color: var(--gold); color: var(--gold-bright); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="bg.mp4" type="video/mp4">
+  </video>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div>
+      <p class="hero-sub">↯ &nbsp; lab codes &nbsp; ↯</p>
+    </div>
+    <h1 class="hero-title">Serial<br>Cheaters</h1>
+    <button class="btn-experiments" onclick="openDrawer()">
+      &#x2665; &nbsp; Subjects
+    </button>
+  </div>
+</section>
+
+<!-- ── SUBJECTS DRAWER ── -->
+<div id="exp-drawer" onclick="closeDrawerOutside(event)">
+  <div class="drawer-panel">
+    <div class="drawer-header">
+      <h2 id="drawer-title">Subjects</h2>
+      <button class="close-btn" onclick="closeDrawer()">✕</button>
+    </div>
+    <div id="subject-list-wrap">
+      <div class="subject-grid" id="subject-list"></div>
+    </div>
+    <ul class="exp-list" id="exp-list" style="display:none"></ul>
+  </div>
+</div>
+
+<!-- ── EXP PAGE ── -->
+<div id="exp-page">
+  <div class="exp-topbar">
+    <button class="back-btn" onclick="closePage()">← Back</button>
+    <h1 id="exp-page-title"></h1>
+  </div>
+  <div class="exp-body" id="exp-page-body"></div>
+</div>
+
+<script>
+// All code stored as regular strings to avoid backtick/script-tag conflicts
+function d(s){ return s; }
+
+const subjects = [
+  {
+    id: 'os',
+    name: 'Operating Systems',
+    icon: '\u2699\uFE0F',
+    experiments: [
+      {
+        title: "Experiment 1 \u2014 Basic Linux Commands & System Calls",
+        aim: "To explore the usage of basic Linux commands and system calls for file, directory, and process management.",
+        theory: "Linux provides powerful tools for managing files, directories, and processes. System calls allow low-level communication between programs and the kernel, enabling file operations such as open(), read(), write(), and close(), as well as process identification using getpid(), getuid(), etc.",
+        sections: [
+          { heading: "Basic Linux Commands", content: "mkdir experiment1\ncd experiment1\necho \"Hello Linux\" > file1.txt\ncat file1.txt\nls -l\nchmod 755 file1.txt\ngrep Hello file1.txt\ntouch fruits.txt\nsort fruits.txt\nps -aux" },
+          { heading: "System Calls Program (C)", content: "#include <fcntl.h>\n#include <unistd.h>\n#include <stdio.h>\n\nint main() {\n    int fd = open(\"demo.txt\", O_CREAT | O_RDWR, 0644);\n    write(fd, \"System Call Demo\", 17);\n\n    char buffer[50];\n    lseek(fd, 0, SEEK_SET);\n    read(fd, buffer, 17);\n\n    printf(\"File Content: %s\\n\", buffer);\n    close(fd);\n\n    printf(\"Process ID: %d\\n\", getpid());\n    printf(\"User ID: %d\\n\", getuid());\n    return 0;\n}" },
+          { heading: "Compile & Run", content: "gcc syscalls.c -o syscalls\n./syscalls" }
+        ],
+        conclusion: "Students successfully explored essential Linux commands and system calls, gaining practical understanding of file handling, directory management, and process interaction within the Linux operating system."
+      },
+      {
+        title: "Experiment 2 \u2014 Shell Scripts",
+        aim: "To study and implement the shell scripts.",
+        theory: "Shell scripts are short programs written in a shell programming language and interpreted by a shell process. They are extremely useful for automating tasks on Linux and other Unix-like operating systems. The default shell on Linux is bash.",
+        sections: [
+          { heading: "Hello World Shell Script", content: "#!/bin/bash\necho \"HELLO WORLD\"" },
+          { heading: "Top 10 Processes by Memory", content: "ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head" },
+          { heading: "Current User & Logname", content: "echo \"Hi, $USER! Let us be friends.\"\necho \"Hello, $LOGNAME!\"" },
+          { heading: "OS Version & Kernel Info", content: "uname -a\nuname -r\ncat /proc/version\ncat /etc/issue" }
+        ],
+        conclusion: "Thus we have studied and implemented shell script programs successfully."
+      },
+      {
+        title: "Experiment 3 \u2014 Linux Commands using Kernel APIs",
+        aim: "Implementation of Basic Linux Commands using Kernel APIs.",
+        theory: "Linux commands are user-level programs that interact with the OS through kernel system calls. Commands such as ls, cp, and mv internally use open(), read(), write(), close(), rename(), and getdents() to perform file operations.",
+        sections: [
+          { heading: "ls Implementation (C)", content: "#include <stdio.h>\n#include <fcntl.h>\n#include <unistd.h>\n#include <sys/syscall.h>\n\nstruct linux_dirent {\n    long d_ino;\n    off_t d_off;\n    unsigned short d_reclen;\n    char d_name[];\n};\n\nint main() {\n    int fd = open(\".\", O_RDONLY);\n    char buf[1024];\n    int nread;\n    while ((nread = syscall(SYS_getdents, fd, buf, sizeof(buf))) > 0) {\n        int pos = 0;\n        while (pos < nread) {\n            struct linux_dirent *d = (struct linux_dirent *)(buf + pos);\n            printf(\"%s\\n\", d->d_name);\n            pos += d->d_reclen;\n        }\n    }\n    close(fd);\n    return 0;\n}" },
+          { heading: "cp Implementation (C)", content: "#include <stdio.h>\n#include <fcntl.h>\n#include <unistd.h>\n\nint main(int argc, char *argv[]) {\n    int src = open(argv[1], O_RDONLY);\n    int dest = open(argv[2], O_CREAT | O_WRONLY, 0644);\n    char buf[100];\n    int n;\n    while ((n = read(src, buf, sizeof(buf))) > 0) {\n        write(dest, buf, n);\n    }\n    close(src);\n    close(dest);\n    printf(\"File copied successfully\\n\");\n    return 0;\n}" },
+          { heading: "mv Implementation (C)", content: "#include <stdio.h>\n\nint main(int argc, char *argv[]) {\n    if (rename(argv[1], argv[2]) == 0)\n        printf(\"File moved successfully\\n\");\n    else\n        perror(\"Error\");\n    return 0;\n}" },
+          { heading: "Compile & Run", content: "gcc ls.c -o ls_cmd\ngcc cp.c -o cp_cmd\ngcc mv.c -o mv_cmd\n\n./ls_cmd\n./cp_cmd source.txt dest.txt\n./mv_cmd old.txt new.txt" }
+        ],
+        conclusion: "This experiment demonstrated the internal working of basic Linux commands using kernel system calls."
+      },
+      {
+        title: "Experiment 4 \u2014 fork(), getpid(), getppid()",
+        aim: "Create a child process using fork(), display PID of parent & child using getpid() and getppid().",
+        theory: "fork() creates a new child process. The child receives 0 as return value, while the parent receives the PID of the child. getpid() returns the current process ID and getppid() returns the parent process ID.",
+        sections: [
+          { heading: "fork() Program (C)", content: "#include <stdio.h>\n#include <unistd.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n\nint main() {\n    pid_t pid = fork();\n\n    if (pid < 0) {\n        perror(\"fork failed\");\n        return 1;\n    } else if (pid == 0) {\n        printf(\"Child: My PID = %d\\n\", getpid());\n        printf(\"Child: My Parent PID = %d\\n\", getppid());\n        _exit(0);\n    } else {\n        printf(\"Parent: Created child with PID = %d\\n\", pid);\n        printf(\"Parent: My PID = %d\\n\", getpid());\n        wait(NULL);\n    }\n    return 0;\n}" },
+          { heading: "Compile & Run", content: "gcc fork_example.c -o fork_example\n./fork_example" }
+        ],
+        conclusion: "Successfully created a child process and displayed child and parent PIDs using fork(), getpid(), and getppid()."
+      },
+      {
+        title: "Experiment 5 \u2014 SJF Non-Preemptive Scheduling",
+        aim: "To demonstrate Shortest Job First (Non-preemptive) CPU scheduling.",
+        theory: "Non-preemptive scheduling: once the CPU is allocated to a process, it runs to completion. SJF non-preemptive chooses the process with the smallest burst time among ready processes when the CPU becomes free.",
+        sections: [
+          { heading: "SJF Non-Preemptive (C)", content: "#include <stdio.h>\ntypedef struct {\n    int pid, arrival, burst, start;\n    int completion, waiting, turnaround, done;\n} Process;\n\nint main() {\n    int n;\n    printf(\"Enter number of processes: \");\n    if (scanf(\"%d\", &n) != 1) return 1;\n\n    Process p[n];\n    for (int i = 0; i < n; i++) {\n        p[i].pid = i + 1;\n        printf(\"Enter arrival time and burst time for P%d: \", p[i].pid);\n        scanf(\"%d %d\", &p[i].arrival, &p[i].burst);\n        p[i].done = 0;\n    }\n\n    int completed = 0, current_time = 0;\n    float total_wait = 0, total_tat = 0;\n\n    while (completed < n) {\n        int idx = -1, min_burst = 1 << 30;\n        for (int i = 0; i < n; i++) {\n            if (!p[i].done && p[i].arrival <= current_time) {\n                if (p[i].burst < min_burst) { min_burst = p[i].burst; idx = i; }\n                else if (p[i].burst == min_burst && p[i].arrival < p[idx].arrival) idx = i;\n            }\n        }\n        if (idx == -1) { current_time++; continue; }\n        p[idx].start = current_time;\n        p[idx].completion = p[idx].start + p[idx].burst;\n        p[idx].turnaround = p[idx].completion - p[idx].arrival;\n        p[idx].waiting = p[idx].start - p[idx].arrival;\n        p[idx].done = 1; current_time = p[idx].completion; completed++;\n        total_wait += p[idx].waiting; total_tat += p[idx].turnaround;\n    }\n\n    printf(\"\\nPID\\tArrival\\tBurst\\tStart\\tCompletion\\tWaiting\\tTurnaround\\n\");\n    for (int i = 0; i < n; i++)\n        printf(\"P%d\\t%d\\t%d\\t%d\\t%d\\t\\t%d\\t%d\\n\",\n            p[i].pid,p[i].arrival,p[i].burst,p[i].start,p[i].completion,p[i].waiting,p[i].turnaround);\n    printf(\"\\nAvg waiting = %.2f\\nAvg turnaround = %.2f\\n\", total_wait/n, total_tat/n);\n    return 0;\n}" },
+          { heading: "Compile & Run", content: "gcc sjf.c -o sjf\n./sjf" }
+        ],
+        conclusion: "Students implemented a non-preemptive SJF scheduling simulator and observed waiting and turnaround times."
+      },
+      {
+        title: "Experiment 6 \u2014 SRJF (Preemptive SJF) Scheduling",
+        aim: "To implement Shortest Remaining Job First (SRJF) CPU scheduling algorithm.",
+        theory: "SRJF is a preemptive CPU scheduling algorithm. The CPU is always assigned to the process with the least remaining burst time. If a new process arrives with a shorter burst time, it preempts the current process.",
+        sections: [
+          { heading: "SRJF Program (C)", content: "#include <stdio.h>\nint main() {\n    int n, i, time = 0, smallest, count = 0, end;\n    int at[20], bt[20], rt[20], wt[20], tat[20];\n    printf(\"Enter number of processes: \");\n    scanf(\"%d\", &n);\n    for (i = 0; i < n; i++) {\n        printf(\"Arrival Time P%d: \", i+1); scanf(\"%d\", &at[i]);\n        printf(\"Burst Time P%d: \",   i+1); scanf(\"%d\", &bt[i]);\n        rt[i] = bt[i];\n    }\n    rt[19] = 9999;\n    for (time = 0; count != n; time++) {\n        smallest = 19;\n        for (i = 0; i < n; i++)\n            if (at[i] <= time && rt[i] < rt[smallest] && rt[i] > 0) smallest = i;\n        rt[smallest]--;\n        if (rt[smallest] == 0) {\n            count++; end = time + 1;\n            wt[smallest]  = end - at[smallest] - bt[smallest];\n            tat[smallest] = end - at[smallest];\n        }\n    }\n    printf(\"\\nProcess\\tAT\\tBT\\tWT\\tTAT\\n\");\n    for (i = 0; i < n; i++)\n        printf(\"P%d\\t%d\\t%d\\t%d\\t%d\\n\", i+1, at[i], bt[i], wt[i], tat[i]);\n    return 0;\n}" },
+          { heading: "Compile & Run", content: "gcc srjf.c -o srjf\n./srjf" }
+        ],
+        conclusion: "The SRJF scheduling algorithm was successfully implemented."
+      },
+      {
+        title: "Experiment 7 \u2014 Producer-Consumer Problem",
+        aim: "To implement the Producer-Consumer problem using Semaphores and Pthreads in C.",
+        theory: "The Producer-Consumer problem is a classic synchronization problem. Semaphores prevent race conditions: 'empty' counts empty slots, 'full' counts filled slots, 'mutex' ensures exclusive buffer access.",
+        sections: [
+          { heading: "Producer-Consumer (C)", content: "#include <stdio.h>\n#include <stdlib.h>\n#include <pthread.h>\n#include <semaphore.h>\n#include <unistd.h>\n\n#define BUFFER_SIZE 5\nint buffer[BUFFER_SIZE], in = 0, out = 0;\nsem_t empty, full;\npthread_mutex_t mutex;\n\nvoid *producer(void *arg) {\n    for (int i = 1; i <= 10; i++) {\n        sem_wait(&empty);\n        pthread_mutex_lock(&mutex);\n        buffer[in] = i;\n        printf(\"Produced %d at %d\\n\", i, in);\n        in = (in + 1) % BUFFER_SIZE;\n        pthread_mutex_unlock(&mutex);\n        sem_post(&full);\n        sleep(1);\n    }\n    return NULL;\n}\n\nvoid *consumer(void *arg) {\n    for (int i = 1; i <= 10; i++) {\n        sem_wait(&full);\n        pthread_mutex_lock(&mutex);\n        int item = buffer[out];\n        printf(\"Consumed %d from %d\\n\", item, out);\n        out = (out + 1) % BUFFER_SIZE;\n        pthread_mutex_unlock(&mutex);\n        sem_post(&empty);\n        sleep(2);\n    }\n    return NULL;\n}\n\nint main() {\n    pthread_t prod, cons;\n    sem_init(&empty, 0, BUFFER_SIZE);\n    sem_init(&full, 0, 0);\n    pthread_mutex_init(&mutex, NULL);\n    pthread_create(&prod, NULL, producer, NULL);\n    pthread_create(&cons, NULL, consumer, NULL);\n    pthread_join(prod, NULL);\n    pthread_join(cons, NULL);\n    sem_destroy(&empty); sem_destroy(&full);\n    pthread_mutex_destroy(&mutex);\n    printf(\"Done.\\n\");\n    return 0;\n}" },
+          { heading: "Compile & Run", content: "gcc producer_consumer.c -o pc -lpthread\n./pc" }
+        ],
+        conclusion: "The Producer-Consumer problem was successfully implemented using semaphores and mutex locks."
+      },
+      {
+        title: "Experiment 8 \u2014 Memory Placement Algorithms",
+        aim: "To implement dynamic partitioning placement algorithms: Best Fit, First Fit, and Worst Fit.",
+        theory: "Dynamic partitioning allocates variable-sized memory partitions to processes. First Fit allocates the first sufficient block. Best Fit allocates the smallest sufficient block. Worst Fit allocates the largest block.",
+        sections: [
+          { heading: "Best Fit (C)", content: "#include<stdio.h>\n#include<conio.h>\n#define max 25\nvoid main() {\n    int frag[max],b[max],f[max],i,j,nb,nf,temp,lowest=10000;\n    static int bf[max],ff[max];\n    clrscr();\n    printf(\"Enter no. of blocks: \"); scanf(\"%d\",&nb);\n    printf(\"Enter no. of files: \");  scanf(\"%d\",&nf);\n    for(i=1;i<=nb;i++) { printf(\"Block %d:\",i); scanf(\"%d\",&b[i]); }\n    for(i=1;i<=nf;i++) { printf(\"File %d:\",i);  scanf(\"%d\",&f[i]); }\n    for(i=1;i<=nf;i++) {\n        for(j=1;j<=nb;j++) {\n            if(bf[j]!=1) {\n                temp=b[j]-f[i];\n                if(temp>=0 && lowest>temp) { ff[i]=j; lowest=temp; }\n            }\n        }\n        frag[i]=lowest; bf[ff[i]]=1; lowest=10000;\n    }\n    printf(\"\\nFile\\tSize\\tBlock\\tBSize\\tFrag\");\n    for(i=1;i<=nf&&ff[i]!=0;i++) printf(\"\\n%d\\t%d\\t%d\\t%d\\t%d\",i,f[i],ff[i],b[ff[i]],frag[i]);\n    getch();\n}" },
+          { heading: "First Fit (C)", content: "#include<stdio.h>\n#include<conio.h>\n#define max 25\nvoid main() {\n    int frag[max],b[max],f[max],i,j,nb,nf,temp;\n    static int bf[max],ff[max];\n    clrscr();\n    printf(\"First Fit\\n\");\n    printf(\"Enter no. of blocks: \"); scanf(\"%d\",&nb);\n    printf(\"Enter no. of files: \");  scanf(\"%d\",&nf);\n    for(i=1;i<=nb;i++) { printf(\"Block %d:\",i); scanf(\"%d\",&b[i]); }\n    for(i=1;i<=nf;i++) { printf(\"File %d:\",i);  scanf(\"%d\",&f[i]); }\n    for(i=1;i<=nf;i++) {\n        for(j=1;j<=nb;j++) {\n            if(bf[j]!=1) {\n                temp=b[j]-f[i];\n                if(temp>=0) { ff[i]=j; frag[i]=temp; bf[j]=1; break; }\n            }\n        }\n    }\n    printf(\"\\nFile\\tSize\\tBlock\\tBSize\\tFrag\");\n    for(i=1;i<=nf&&ff[i]!=0;i++) printf(\"\\n%d\\t%d\\t%d\\t%d\\t%d\",i,f[i],ff[i],b[ff[i]],frag[i]);\n    getch();\n}" },
+          { heading: "Worst Fit (C)", content: "#include<stdio.h>\n#include<conio.h>\n#define max 25\nvoid main() {\n    int frag[max],b[max],f[max],i,j,nb,nf,temp,highest=0;\n    static int bf[max],ff[max];\n    clrscr();\n    printf(\"Worst Fit\\n\");\n    printf(\"Enter no. of blocks: \"); scanf(\"%d\",&nb);\n    printf(\"Enter no. of files: \");  scanf(\"%d\",&nf);\n    for(i=1;i<=nb;i++) { printf(\"Block %d:\",i); scanf(\"%d\",&b[i]); }\n    for(i=1;i<=nf;i++) { printf(\"File %d:\",i);  scanf(\"%d\",&f[i]); }\n    for(i=1;i<=nf;i++) {\n        for(j=1;j<=nb;j++) {\n            if(bf[j]!=1) {\n                temp=b[j]-f[i];\n                if(temp>=0 && highest<temp) { ff[i]=j; highest=temp; }\n            }\n        }\n        frag[i]=highest; bf[ff[i]]=1; highest=0;\n    }\n    printf(\"\\nFile\\tSize\\tBlock\\tBSize\\tFrag\");\n    for(i=1;i<=nf;i++) printf(\"\\n%d\\t%d\\t%d\\t%d\\t%d\",i,f[i],ff[i],b[ff[i]],frag[i]);\n    getch();\n}" }
+        ],
+        conclusion: "Best Fit, First Fit, and Worst Fit dynamic memory placement algorithms were implemented."
+      },
+      {
+        title: "Experiment 9 \u2014 Page Replacement: FIFO & LRU",
+        aim: "To implement page replacement policies: FIFO and LRU.",
+        theory: "Page replacement algorithms decide which page to evict when a page fault occurs. FIFO replaces the oldest page. LRU replaces the least recently used page.",
+        sections: [
+          { heading: "FIFO Page Replacement (C)", content: "#include<stdio.h>\n#include<conio.h>\nmain() {\n    int i,j,k,f,pf=0,count=0,rs[25],m[10],n;\n    clrscr();\n    printf(\"Reference string length: \"); scanf(\"%d\",&n);\n    printf(\"Reference string: \");\n    for(i=0;i<n;i++) scanf(\"%d\",&rs[i]);\n    printf(\"Frames: \"); scanf(\"%d\",&f);\n    for(i=0;i<f;i++) m[i]=-1;\n    for(i=0;i<n;i++) {\n        for(k=0;k<f;k++) if(m[k]==rs[i]) break;\n        if(k==f) { m[count++]=rs[i]; pf++; }\n        for(j=0;j<f;j++) printf(\"\\t%d\",m[j]);\n        if(k==f) printf(\"\\tPF %d\",pf);\n        printf(\"\\n\");\n        if(count==f) count=0;\n    }\n    printf(\"Page Faults (FIFO): %d\",pf);\n    getch();\n}" },
+          { heading: "LRU Page Replacement (C)", content: "#include<stdio.h>\n#include<conio.h>\nmain() {\n    int i,j,min,rs[25],m[10],count[10],flag[25],n,f,pf=0,next=1;\n    clrscr();\n    printf(\"Reference string length: \"); scanf(\"%d\",&n);\n    printf(\"Reference string: \");\n    for(i=0;i<n;i++) { scanf(\"%d\",&rs[i]); flag[i]=0; }\n    printf(\"Frames: \"); scanf(\"%d\",&f);\n    for(i=0;i<f;i++) { count[i]=0; m[i]=-1; }\n    for(i=0;i<n;i++) {\n        for(j=0;j<f;j++)\n            if(m[j]==rs[i]) { flag[i]=1; count[j]=next; next++; }\n        if(flag[i]==0) {\n            if(i<f) { m[i]=rs[i]; count[i]=next; next++; }\n            else {\n                min=0;\n                for(j=1;j<f;j++) if(count[min]>count[j]) min=j;\n                m[min]=rs[i]; count[min]=next; next++;\n            }\n            pf++;\n        }\n        for(j=0;j<f;j++) printf(\"%d\\t\",m[j]);\n        if(flag[i]==0) printf(\"PF %d\",pf);\n        printf(\"\\n\");\n    }\n    printf(\"Page Faults (LRU): %d\",pf);\n    getch();\n}" }
+        ],
+        conclusion: "FIFO and LRU page replacement algorithms were studied and implemented."
+      },
+      {
+        title: "Experiment 10 \u2014 Disk Scheduling: FCFS, SCAN, C-SCAN",
+        aim: "To implement Disk Scheduling algorithms: FCFS, SCAN and C-SCAN.",
+        theory: "Disk scheduling minimizes seek time. FCFS serves requests in order. SCAN moves arm in one direction servicing requests then reverses. C-SCAN only services in one direction then jumps back to start.",
+        sections: [
+          { heading: "FCFS Disk Scheduling (C)", content: "#include<stdio.h>\nint main() {\n    int queue[20],n,head,i,j,seek=0,max,diff;\n    float avg;\n    printf(\"Max disk range: \"); scanf(\"%d\",&max);\n    printf(\"Queue size: \"); scanf(\"%d\",&n);\n    printf(\"Disk positions: \");\n    for(i=1;i<=n;i++) scanf(\"%d\",&queue[i]);\n    printf(\"Initial head: \"); scanf(\"%d\",&head);\n    queue[0]=head;\n    for(j=0;j<=n-1;j++) {\n        diff=abs(queue[j+1]-queue[j]);\n        seek+=diff;\n        printf(\"%d -> %d (seek %d)\\n\",queue[j],queue[j+1],diff);\n    }\n    printf(\"Total seek: %d\\nAvg: %.2f\\n\",seek,seek/(float)n);\n    return 0;\n}" },
+          { heading: "SCAN Disk Scheduling (C)", content: "#include<stdio.h>\nint main() {\n    int queue[20],n,head,i,j,seek=0,max,diff,temp;\n    int q1[20],q2[20],t1=0,t2=0;\n    printf(\"Max range: \"); scanf(\"%d\",&max);\n    printf(\"Head: \"); scanf(\"%d\",&head);\n    printf(\"Queue size: \"); scanf(\"%d\",&n);\n    printf(\"Positions: \");\n    for(i=1;i<=n;i++) {\n        scanf(\"%d\",&temp);\n        if(temp>=head) q1[t1++]=temp; else q2[t2++]=temp;\n    }\n    for(i=0;i<t1-1;i++) for(j=i+1;j<t1;j++) if(q1[i]>q1[j]) { temp=q1[i]; q1[i]=q1[j]; q1[j]=temp; }\n    for(i=0;i<t2-1;i++) for(j=i+1;j<t2;j++) if(q2[i]<q2[j]) { temp=q2[i]; q2[i]=q2[j]; q2[j]=temp; }\n    for(i=1,j=0;j<t1;i++,j++) queue[i]=q1[j];\n    queue[i]=max;\n    for(i=t1+2,j=0;j<t2;i++,j++) queue[i]=q2[j];\n    queue[0]=head;\n    for(j=0;j<=n+1;j++) {\n        diff=abs(queue[j+1]-queue[j]); seek+=diff;\n        printf(\"%d -> %d (seek %d)\\n\",queue[j],queue[j+1],diff);\n    }\n    printf(\"Total: %d\\nAvg: %.2f\\n\",seek,seek/(float)n);\n    return 0;\n}" },
+          { heading: "C-SCAN Disk Scheduling (C)", content: "#include<stdio.h>\n#include<stdlib.h>\nint main() {\n    int queue[20],n,head,i,j,seek=0,max,diff,temp;\n    int q1[20],q2[20],t1=0,t2=0;\n    printf(\"Max range: \"); scanf(\"%d\",&max);\n    printf(\"Head: \"); scanf(\"%d\",&head);\n    printf(\"Queue size: \"); scanf(\"%d\",&n);\n    printf(\"Positions: \");\n    for(i=1;i<=n;i++) {\n        scanf(\"%d\",&temp);\n        if(temp>=head) q1[t1++]=temp; else q2[t2++]=temp;\n    }\n    for(i=0;i<t1-1;i++) for(j=i+1;j<t1;j++) if(q1[i]>q1[j]) { temp=q1[i]; q1[i]=q1[j]; q1[j]=temp; }\n    for(i=0;i<t2-1;i++) for(j=i+1;j<t2;j++) if(q2[i]>q2[j]) { temp=q2[i]; q2[i]=q2[j]; q2[j]=temp; }\n    for(i=1,j=0;j<t1;i++,j++) queue[i]=q1[j];\n    queue[i++]=max; queue[i++]=0;\n    for(j=0;j<t2;i++,j++) queue[i]=q2[j];\n    queue[0]=head;\n    for(j=0;j<=n+1;j++) {\n        diff=abs(queue[j+1]-queue[j]); seek+=diff;\n        printf(\"%d -> %d (seek %d)\\n\",queue[j],queue[j+1],diff);\n    }\n    printf(\"Total: %d\\nAvg: %.2f\\n\",seek,seek/(float)n);\n    return 0;\n}" }
+        ],
+        conclusion: "FCFS, SCAN, and C-SCAN disk scheduling algorithms were successfully implemented."
+      }
+    ]
+  },
+  {
+    id: 'wt',
+    name: 'Web Technology',
+    icon: '\uD83C\uDF10',
+    experiments: [
+      {
+        title: "Experiment 1 \u2014 Resume Webpage",
+        aim: "To create a simple resume webpage using HTML and CSS.",
+        theory: "HTML provides structure to web content. CSS adds visual styling such as colors, fonts, spacing, and layout. Together they form the foundation of static web pages.",
+        sections: [
+          { heading: "Resume (HTML + CSS)", content: "<!DOCTYPE html>\n<html>\n<head>\n  <title>My Resume</title>\n  <style>\n    body { font-family: Arial; background-color: #F8F8F8; }\n    .container { width: 60%; margin: auto; background-color: white; padding: 20px; border-radius: 10px; }\n    h1 { color: white; background-color: #2E8B57; padding: 10px; }\n    h1 { color: #2E8B57; }\n    p, li { color: black; }\n    hr { border: 1px solid gray; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <h1>Your Name</h1>\n    <p>Email: your@email.com | Phone: 1234567890</p>\n    <hr>\n    <h2>Career Objective</h2>\n    <p>To get a good job where I can use my skills and grow.</p>\n    <h2>Education</h2>\n    <ul>\n      <li>BSc IT - Mumbai University</li>\n      <li>HSC - XYZ College</li>\n    </ul>\n    <h2>Skills</h2>\n    <ul>\n      <li>HTML, CSS</li>\n      <li>JavaScript Basics</li>\n    </ul>\n    <h2>Projects</h2>\n    <ul>\n      <li>Crop Recommendation System</li>\n      <li>Simple Website</li>\n    </ul>\n    <h2>Personal Details</h2>\n    <p>Date of Birth: 01/01/2000</p>\n    <p>Address: Mumbai, India</p>\n  </div>\n</body>\n</html>" }
+        ],
+        conclusion: "A basic resume webpage was created using HTML and CSS."
+      },
+      {
+        title: "Experiment 2 \u2014 Responsive Webpage with Bootstrap",
+        aim: "To create a responsive webpage using Bootstrap 5 with a navbar and grid layout.",
+        theory: "Bootstrap is a front-end CSS framework for responsive, mobile-first web design. It provides a 12-column grid system and pre-built components like navbars and cards.",
+        sections: [
+          { heading: "Responsive Webpage (HTML + Bootstrap)", content: "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Responsive Web Page</title>\n  <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n  <style>\n    body { background-color: #F8F8F8; }\n    .box { background: #2EBB57; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 15px; }\n  </style>\n</head>\n<body>\n<nav class=\"navbar navbar-expand-lg navbar-dark bg-dark\">\n  <div class=\"container\">\n    <a class=\"navbar-brand\" href=\"#\">My Website</a>\n    <button class=\"navbar-toggler\" data-bs-toggle=\"collapse\" data-bs-target=\"#menu\">\n      <span class=\"navbar-toggler-icon\"></span>\n    </button>\n    <div class=\"collapse navbar-collapse\" id=\"menu\">\n      <ul class=\"navbar-nav ms-auto\">\n        <li class=\"nav-item\"><a class=\"nav-link\" href=\"#\">Home</a></li>\n        <li class=\"nav-item\"><a class=\"nav-link\" href=\"#\">About</a></li>\n        <li class=\"nav-item\"><a class=\"nav-link\" href=\"#\">Services</a></li>\n        <li class=\"nav-item\"><a class=\"nav-link\" href=\"#\">Contact</a></li>\n      </ul>\n    </div>\n  </div>\n</nav>\n<div class=\"container mt-4\">\n  <div class=\"row\">\n    <div class=\"col-md-4\"><div class=\"box\">Column 1</div></div>\n    <div class=\"col-md-4\"><div class=\"box\">Column 2</div></div>\n    <div class=\"col-md-4\"><div class=\"box\">Column 3</div></div>\n  </div>\n</div>\n<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/js/bootstrap.bundle.min.js\"><\/script>\n</body>\n</html>" }
+        ],
+        conclusion: "A responsive Bootstrap webpage with navbar and 3-column grid was created."
+      },
+      {
+        title: "Experiment 3 \u2014 To-Do List with JavaScript",
+        aim: "To build an interactive To-Do list using HTML, CSS, and JavaScript.",
+        theory: "JavaScript enables dynamic interaction on web pages. DOM manipulation allows adding, removing, and modifying HTML elements in real-time. classList.toggle() switches CSS classes to mark tasks as done.",
+        sections: [
+          { heading: "To-Do List (HTML + CSS + JS)", content: "<!DOCTYPE html>\n<html>\n<head>\n  <title>To-Do</title>\n  <style>\n    body { font-family: Arial; text-align: center; background:#F8F8F8; }\n    .box { width: 280px; margin: auto; background: white; padding: 15px; border-radius: 10px; }\n    h2 { color:#2E8B57; }\n    input { padding:5px; width:65%; }\n    button { padding:5px; border:none; background:#00FFFF; cursor:pointer; }\n    li { list-style:none; margin:8px 0; background:#eee; padding:5px; display:flex; justify-content:space-between; }\n    .done { text-decoration:line-through; color:gray; }\n  </style>\n</head>\n<body>\n  <div class=\"box\">\n    <h2>To-Do List</h2>\n    <input id=\"task\" placeholder=\"Enter task\">\n    <button onclick=\"add()\">Add</button>\n    <ul id=\"list\"></ul>\n  </div>\n  <script>\n    function add() {\n      let t = document.getElementById(\"task\").value;\n      if(t===\"\") return alert(\"Enter task\");\n      let li = document.createElement(\"li\");\n      li.innerHTML = t + ' <button onclick=\"this.parentElement.remove()\">X<\\/button>';\n      li.onclick = function() { this.classList.toggle(\"done\"); };\n      document.getElementById(\"list\").appendChild(li);\n      document.getElementById(\"task\").value=\"\";\n    }\n  <\/script>\n</body>\n</html>" }
+        ],
+        conclusion: "An interactive To-Do list was built using JavaScript DOM manipulation."
+      },
+      {
+        title: "Experiment 4 \u2014 jQuery Animation Demo",
+        aim: "To demonstrate jQuery effects: hide, show, toggle, and animate.",
+        theory: "jQuery simplifies DOM manipulation, event handling, and animations. hide(), show(), toggle() control visibility. animate() creates custom CSS transitions over a specified duration.",
+        sections: [
+          { heading: "jQuery Effects Demo", content: "<!DOCTYPE html>\n<html>\n<head>\n  <title>jQuery Effects</title>\n  <script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"><\/script>\n  <style>\n    body { text-align: center; font-family: Arial; background-color: #F8F8F8; }\n    #box { width: 200px; height: 200px; background-color: #00FFFF; margin: 20px auto; line-height: 200px; position: relative; }\n    button { padding: 8px; margin: 5px; background-color: black; color: white; border: none; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <h2>jQuery Effects Demo</h2>\n  <div id=\"box\">Hello</div>\n  <button id=\"hideBtn\">Hide</button>\n  <button id=\"showBtn\">Show</button>\n  <button id=\"toggleBtn\">Toggle</button>\n  <button id=\"animateBtn\">Animate</button>\n  <script>\n    $(document).ready(function(){\n      $(\"#hideBtn\").click(function(){ $(\"#box\").hide(500); });\n      $(\"#showBtn\").click(function(){ $(\"#box\").show(500); });\n      $(\"#toggleBtn\").click(function(){ $(\"#box\").toggle(500); });\n      $(\"#animateBtn\").click(function(){\n        $(\"#box\").animate({ left: \"100px\", opacity: 0.5, height: \"250px\", width: \"250px\" }, 500);\n      });\n    });\n  <\/script>\n</body>\n</html>" }
+        ],
+        conclusion: "jQuery animation effects were successfully demonstrated."
+      },
+      {
+        title: "Experiment 5 \u2014 Weather App using API",
+        aim: "To build a weather application that fetches real-time data from the OpenWeatherMap API.",
+        theory: "APIs allow web applications to communicate with external services. The Fetch API sends asynchronous HTTP requests and receives JSON responses. Promises (.then/.catch) handle the asynchronous flow.",
+        sections: [
+          { heading: "Weather App (HTML + JS + Fetch API)", content: "<!DOCTYPE html>\n<html>\n<head>\n  <title>Weather App</title>\n  <style>\n    body { font-family: Arial; text-align: center; background: #87CEEB; }\n    .box { background: white; padding: 20px; margin: 50px auto; width: 300px; border-radius: 10px; }\n    input, button { padding: 10px; margin: 10px; }\n    button { background: #007BFF; color: white; border: none; cursor: pointer; }\n    #result { margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"box\">\n    <h2>Weather App</h2>\n    <input type=\"text\" id=\"city\" placeholder=\"Enter city name\"><br>\n    <button onclick=\"getWeather()\">Get Weather</button>\n    <div id=\"result\"></div>\n  </div>\n  <script>\n    function getWeather() {\n      var city = document.getElementById(\"city\").value;\n      var apiKey = \"YOUR_API_KEY_HERE\";\n      var url = \"https://api.openweathermap.org/data/2.5/weather?q=\" + city + \"&appid=\" + apiKey + \"&units=metric\";\n      fetch(url)\n        .then(response => response.json())\n        .then(data => {\n          document.getElementById(\"result\").innerHTML =\n            \"<h3>\" + data.name + \"</h3>\" +\n            \"Temperature: \" + data.main.temp + \" C<br>\" +\n            \"Humidity: \" + data.main.humidity + \" %<br>\" +\n            \"Condition: \" + data.weather[0].main;\n        })\n        .catch(error => {\n          document.getElementById(\"result\").innerHTML = \"City not found!\";\n        });\n    }\n  <\/script>\n</body>\n</html>" }
+        ],
+        conclusion: "A weather application was built that fetches live data using the OpenWeatherMap API."
+      },
+      {
+        title: "Experiment 6 \u2014 Real-Time Search with PHP & MySQL",
+        aim: "To implement a real-time search feature using PHP, MySQL, and AJAX.",
+        theory: "Real-time search filters database results as the user types without page reloads. AJAX sends HTTP requests in the background. PHP processes the request, queries MySQL with a LIKE clause, and returns matching HTML.",
+        sections: [
+          { heading: "Real-Time Search (PHP + MySQL + AJAX)", content: "<?php\n$conn = new mysqli(\"localhost\", \"root\", \"\", \"search_db\");\n?>\n<!DOCTYPE html>\n<html>\n<head>\n  <title>Live Search</title>\n  <style>\n    body { font-family: Arial; text-align: center; }\n    input { padding: 10px; width: 250px; }\n    #result { margin-top: 20px; }\n    .item { background: #f2f2f2; padding: 10px; margin: 5px; border-radius: 5px; }\n  </style>\n</head>\n<body>\n  <h2>Real-Time Search</h2>\n  <input type=\"text\" id=\"search\" placeholder=\"Search...\" onkeyup=\"searchData()\">\n  <div id=\"result\">\n    <?php\n    $sql = \"SELECT * FROM items\";\n    $res = $conn->query($sql);\n    while($row = $res->fetch_assoc()) {\n      echo \"<div class='item'>\";\n      echo $row['name'] . \" - [ \" . $row['category'] . \" ]\";\n      echo \"</div>\";\n    }\n    ?>\n  </div>\n  <script>\n    function searchData() {\n      var value = document.getElementById(\"search\").value;\n      var xhr = new XMLHttpRequest();\n      xhr.open(\"GET\", \"?q=\" + value, true);\n      xhr.onload = function() { document.getElementById(\"result\").innerHTML = this.responseText; };\n      xhr.send();\n    }\n  <\/script>\n</body>\n</html>\n<?php\nif (isset($_GET['q'])) {\n  $q = $_GET['q'];\n  $sql = \"SELECT * FROM items WHERE name LIKE '%$q%'\";\n  $result = $conn->query($sql);\n  if ($result->num_rows > 0) {\n    while($row = $result->fetch_assoc()) {\n      echo \"<div class='item'>\" . $row['name'] . \" - [ \" . $row['category'] . \" ]</div>\";\n    }\n  } else { echo \"No results found\"; }\n  exit();\n}\n?>" }
+        ],
+        conclusion: "Real-time search was implemented using AJAX to query MySQL without page reload."
+      },
+      {
+        title: "Experiment 7 \u2014 Student Detail XML",
+        aim: "To create an XML document with DTD to store student details.",
+        theory: "XML is a markup language for storing structured data. DTD defines the legal building blocks of an XML document. PCDATA means the element contains text parsed by the XML parser.",
+        sections: [
+          { heading: "Student XML with DTD", content: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<!DOCTYPE students [\n  <!ELEMENT students (student+)>\n  <!ELEMENT student (name, rolno, branch, email)>\n  <!ELEMENT name (#PCDATA)>\n  <!ELEMENT rolno (#PCDATA)>\n  <!ELEMENT branch (#PCDATA)>\n  <!ELEMENT email (#PCDATA)>\n]>\n\n<students>\n  <student>\n    <name>Rahul Sharma</name>\n    <rolno>101</rolno>\n    <branch>Computer</branch>\n    <email>rahul@gmail.com</email>\n  </student>\n  <student>\n    <name>Priya Singh</name>\n    <rolno>102</rolno>\n    <branch>IT</branch>\n    <email>priya@gmail.com</email>\n  </student>\n</students>" }
+        ],
+        conclusion: "An XML document with inline DTD was created to store structured student data."
+      },
+      {
+        title: "Experiment 8 \u2014 PHP Session & Cookie Login",
+        aim: "To implement a login system using PHP Sessions and Cookies.",
+        theory: "HTTP is stateless, so Sessions and Cookies maintain state across requests. $_SESSION stores data server-side. $_COOKIE stores data client-side. session_start() must be called before output. session_destroy() clears session data on logout.",
+        sections: [
+          { heading: "PHP Session & Cookie Login", content: "<?php\nsession_start();\nif(isset($_GET['logout'])) {\n  session_destroy();\n  setcookie(\"user\", \"\", time() - 3600);\n  header(\"Location: index.php\");\n  exit();\n}\n$valid_user = \"admin\";\n$valid_pass = \"1234\";\nif ($_SERVER[\"REQUEST_METHOD\"] == \"POST\") {\n  $username = $_POST['username'];\n  $password = $_POST['password'];\n  if ($username == $valid_user && $password == $valid_pass) {\n    $_SESSION['user'] = $username;\n    setcookie(\"user\", $username, time() + 3600);\n  } else {\n    $error = \"Invalid Login!\";\n  }\n}\n?>\n<!DOCTYPE html>\n<html>\n<head><title>Login System</title></head>\n<body>\n<?php if (isset($_SESSION['user'])): ?>\n  <h2>Welcome <?php echo $_SESSION['user']; ?></h2>\n  <p>Logged in via SESSION.</p>\n  <p>Cookie: <?php if(isset($_COOKIE['user'])) echo $_COOKIE['user']; ?></p>\n  <a href=\"?logout=true\">Logout</a>\n<?php else: ?>\n  <h2>Login Page</h2>\n  <?php if (isset($error)) echo $error; ?>\n  <form method=\"post\">\n    Username: <input type=\"text\" name=\"username\"><br><br>\n    Password: <input type=\"password\" name=\"password\"><br>\n    <input type=\"submit\" value=\"Login\">\n  </form>\n<?php endif; ?>\n</body>\n</html>" }
+        ],
+        conclusion: "A PHP login system using Sessions and Cookies was implemented successfully."
+      }
+    ]
+  },
+  {
+    id: 'dbms',
+    name: 'BDSM',
+    icon: '\uD83D\uDC80',
+    experiments: [
+      {
+        title: "Experiment 1 \u2014 DDL Commands",
+        aim: "To perform DDL operations: CREATE, ALTER, RENAME, TRUNCATE, DROP on a table.",
+        theory: "DDL (Data Definition Language) commands define and modify database structure. CREATE makes a new table, ALTER modifies it, RENAME changes its name, TRUNCATE removes all rows keeping structure, DROP deletes the table entirely.",
+        sections: [
+          { heading: "DDL Commands (SQL)", content: "-- 1. CREATE Table\nCREATE TABLE Orders (\n  Order_ID INT PRIMARY KEY,\n  Customer_ID INT,\n  Order_Date DATE,\n  Total_Amount DECIMAL(10,2),\n  FOREIGN KEY (Customer_ID) REFERENCES Customer(Customer_ID)\n);\n\n-- 2. ALTER Table (Add a new column)\nALTER TABLE Orders\nADD Status VARCHAR(20);\n\n-- 3. RENAME Table\nRENAME TABLE Orders TO Customer_Orders;\n-- OR in some systems:\nALTER TABLE Orders RENAME TO Customer_Orders;\n\n-- 4. TRUNCATE Table\nTRUNCATE TABLE Customer_Orders;\n\n-- 5. DROP Table\nDROP TABLE Customer_Orders;" }
+        ],
+        conclusion: "DDL commands CREATE, ALTER, RENAME, TRUNCATE, and DROP were successfully executed to define and modify database table structure."
+      },
+      {
+        title: "Experiment 2 \u2014 Table Creation with Constraints",
+        aim: "To create multiple related tables with primary keys, foreign keys, and other constraints.",
+        theory: "Constraints enforce rules on data. PRIMARY KEY uniquely identifies rows. FOREIGN KEY links tables. NOT NULL prevents empty values. UNIQUE ensures no duplicates. CHECK validates data against a condition.",
+        sections: [
+          { heading: "Tables with Constraints (SQL)", content: "-- 1. Customer Table\nCREATE TABLE Customer (\n  Customer_ID INT PRIMARY KEY,\n  Name VARCHAR(50) NOT NULL,\n  Email VARCHAR(100) UNIQUE,\n  Phone VARCHAR(15) UNIQUE,\n  Address VARCHAR(150)\n);\n\n-- 2. Category Table\nCREATE TABLE Category (\n  Category_ID INT PRIMARY KEY,\n  Category_Name VARCHAR(50) NOT NULL\n);\n\n-- 3. Product Table\nCREATE TABLE Product (\n  Product_ID INT PRIMARY KEY,\n  Product_Name VARCHAR(50) NOT NULL,\n  Price DECIMAL(10,2) CHECK (Price > 0),\n  Category_ID INT,\n  FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)\n);\n\n-- 4. Orders Table\nCREATE TABLE Orders (\n  Order_ID INT PRIMARY KEY,\n  Customer_ID INT,\n  Order_Date DATE NOT NULL,\n  Total_Amount DECIMAL(10,2),\n  FOREIGN KEY (Customer_ID) REFERENCES Customer(Customer_ID)\n);\n\n-- 5. Order_Details Table\nCREATE TABLE Order_Details (\n  Order_Detail_ID INT PRIMARY KEY,\n  Order_ID INT,\n  Product_ID INT,\n  Quantity INT CHECK (Quantity > 0),\n  Price DECIMAL(10,2) CHECK (Price >= 0),\n  FOREIGN KEY (Order_ID) REFERENCES Orders(Order_ID),\n  FOREIGN KEY (Product_ID) REFERENCES Product(Product_ID)\n);\n\n-- 6. Payment Table\nCREATE TABLE Payment (\n  Payment_ID INT PRIMARY KEY,\n  Order_ID INT,\n  Payment_Date DATE,\n  Amount DECIMAL(10,2) CHECK (Amount > 0),\n  Payment_Mode VARCHAR(20),\n  FOREIGN KEY (Order_ID) REFERENCES Orders(Order_ID)\n);" }
+        ],
+        conclusion: "Multiple related tables with various constraints were created, demonstrating referential integrity and data validation in a relational database."
+      },
+      {
+        title: "Experiment 3 \u2014 DML Commands",
+        aim: "To perform DML operations: INSERT, SELECT, UPDATE, DELETE on a table.",
+        theory: "DML (Data Manipulation Language) commands manipulate data stored in tables. INSERT adds new rows, SELECT retrieves data, UPDATE modifies existing rows, DELETE removes rows.",
+        sections: [
+          { heading: "DML Commands (SQL)", content: "-- 1. INSERT (Add Data)\nINSERT INTO Orders (Order_ID, Customer_ID, Order_Date, Total_Amount)\nVALUES (101, 1, '2026-04-21', 2500.00);\n\n-- 2. SELECT (Retrieve Data)\nSELECT * FROM Orders;\n\n-- 3. UPDATE (Modify Data)\nUPDATE Orders\nSET Total_Amount = 3000.00\nWHERE Order_ID = 101;\n\n-- 4. DELETE (Remove Data)\nDELETE FROM Orders\nWHERE Order_ID = 101;" }
+        ],
+        conclusion: "DML commands INSERT, SELECT, UPDATE, and DELETE were successfully executed to manage data within the Orders table."
+      },
+      {
+        title: "Experiment 4 \u2014 (Refer Experiment 3)",
+        aim: "Refer to Experiment 3 for DML commands coverage.",
+        theory: "This experiment is covered as part of Experiment 3 (DML Commands — INSERT, SELECT, UPDATE, DELETE).",
+        sections: [
+          { heading: "Note", content: "-- Experiment 4 content is covered in Experiment 3.\n-- Please refer to DML Commands (INSERT, SELECT, UPDATE, DELETE)." }
+        ],
+        conclusion: "Refer to Experiment 3 for complete DML implementation."
+      },
+      {
+        title: "Experiment 5 \u2014 SQL Joins",
+        aim: "To implement different types of SQL Joins: INNER, LEFT, RIGHT, FULL OUTER, CROSS, and SELF JOIN.",
+        theory: "SQL Joins combine rows from two or more tables based on a related column. INNER JOIN returns matching rows. LEFT/RIGHT JOIN returns all rows from one side plus matches. FULL OUTER JOIN returns all rows from both tables. CROSS JOIN produces a cartesian product. SELF JOIN joins a table with itself.",
+        sections: [
+          { heading: "SQL Joins (SQL)", content: "-- 1. INNER JOIN - Returns only matching records\nSELECT Customer.Name, Orders.Order_ID, Orders.Total_Amount\nFROM Customer\nINNER JOIN Orders ON Customer.Customer_ID = Orders.Customer_ID;\n\n-- 2. LEFT JOIN - All from LEFT + matching from RIGHT\nSELECT Customer.Name, Orders.Order_ID\nFROM Customer\nLEFT JOIN Orders ON Customer.Customer_ID = Orders.Customer_ID;\n\n-- 3. RIGHT JOIN - All from RIGHT + matching from LEFT\nSELECT Customer.Name, Orders.Order_ID\nFROM Customer\nRIGHT JOIN Orders ON Customer.Customer_ID = Orders.Customer_ID;\n\n-- 4. FULL OUTER JOIN - All records from both tables\nSELECT Customer.Name, Orders.Order_ID\nFROM Customer\nFULL OUTER JOIN Orders ON Customer.Customer_ID = Orders.Customer_ID;\n\n-- 5. CROSS JOIN - Cartesian product (all combinations)\nSELECT Customer.Name, Product.Product_Name\nFROM Customer\nCROSS JOIN Product;\n\n-- 6. SELF JOIN - Table joined with itself\nSELECT A.Name AS Customer1, B.Name AS Customer2\nFROM Customer A, Customer B\nWHERE A.Customer_ID <> B.Customer_ID;" }
+        ],
+        conclusion: "All six types of SQL Joins were implemented and their behavior in combining data from multiple tables was observed."
+      },
+      {
+        title: "Experiment 6 \u2014 Aggregate Functions",
+        aim: "To use SQL aggregate functions: COUNT, SUM, AVG, MIN, MAX.",
+        theory: "Aggregate functions perform calculations on a set of values and return a single result. COUNT counts rows, SUM adds numeric values, AVG calculates the mean, MIN finds the smallest value, MAX finds the largest.",
+        sections: [
+          { heading: "Aggregate Functions (SQL)", content: "-- 1. COUNT() - Counts number of records\nSELECT COUNT(*) AS Total_Orders\nFROM Orders;\n\n-- 2. SUM() - Adds values\nSELECT SUM(Total_Amount) AS Total_Sales\nFROM Orders;\n\n-- 3. AVG() - Finds average\nSELECT AVG(Total_Amount) AS Average_Order_Value\nFROM Orders;\n\n-- 4. MIN() - Finds smallest value\nSELECT MIN(Price) AS Lowest_Price\nFROM Product;\n\n-- 5. MAX() - Finds largest value\nSELECT MAX(Price) AS Highest_Price\nFROM Product;" }
+        ],
+        conclusion: "SQL aggregate functions COUNT, SUM, AVG, MIN, and MAX were successfully demonstrated on the Orders and Product tables."
+      },
+      {
+        title: "Experiment 7 \u2014 Views",
+        aim: "To create a SQL VIEW with attribute renaming on the Orders table.",
+        theory: "A VIEW is a virtual table based on a SELECT query. It does not store data itself but presents data from one or more tables. Views simplify complex queries, provide data abstraction, and can rename columns for clarity.",
+        sections: [
+          { heading: "Create & Use View (SQL)", content: "-- Create VIEW with renamed attributes\nCREATE VIEW Order_Summary AS\nSELECT\n  Order_ID     AS O_ID,\n  Customer_ID  AS C_ID,\n  Order_Date   AS O_Date,\n  Total_Amount AS Amount\nFROM Orders;\n\n-- Display VIEW contents\nSELECT * FROM Order_Summary;" }
+        ],
+        conclusion: "A SQL VIEW was created on the Orders table with renamed attributes, demonstrating data abstraction and simplified querying through views."
+      },
+      {
+        title: "Experiment 8 \u2014 String Functions",
+        aim: "To demonstrate SQL string functions: INITCAP, CONCAT, LTRIM, RTRIM, SUBSTR, LENGTH.",
+        theory: "SQL string functions manipulate text data. INITCAP capitalises the first letter of each word. CONCAT joins strings. LTRIM/RTRIM remove leading/trailing spaces. SUBSTR extracts a substring. LENGTH returns the string length.",
+        sections: [
+          { heading: "String Functions (SQL)", content: "-- 1. INITCAP() - First letter of each word to capital\nSELECT INITCAP('hello world') FROM DUAL;\n-- Output: Hello World\nSELECT INITCAP(Name) FROM Employee;\n\n-- 2. CONCAT() - Joins two strings\nSELECT CONCAT('Hello', ' World') FROM DUAL;\n-- Output: Hello World\nSELECT CONCAT(Name, Address) FROM Employee;\n\n-- 3. LTRIM() - Removes spaces from left\nSELECT LTRIM('   SQL') FROM DUAL;\n-- Output: SQL\n\n-- 4. RTRIM() - Removes spaces from right\nSELECT RTRIM('SQL   ') FROM DUAL;\n-- Output: SQL\n\n-- 5. SUBSTR() - Extracts part of a string\nSELECT SUBSTR('DATABASE', 1, 4) FROM DUAL;\n-- Output: DATA\nSELECT SUBSTR(Name, 1, 3) FROM Employee;\n\n-- 6. LENGTH() - Finds length of string\nSELECT LENGTH('SQL') FROM DUAL;\n-- Output: 3\nSELECT LENGTH(Name) FROM Employee;" }
+        ],
+        conclusion: "SQL string functions INITCAP, CONCAT, LTRIM, RTRIM, SUBSTR, and LENGTH were successfully demonstrated using DUAL and the Employee table."
+      }
+    ]
+  }
+];
+
+// ── STATE ──
+let currentSubjectIdx = null;
+
+// ── BUILD SUBJECT CARDS ──
+const subjectListEl = document.getElementById('subject-list');
+subjects.forEach((sub, i) => {
+  const card = document.createElement('div');
+  card.className = 'subject-card';
+  card.innerHTML = '<span class="s-icon">' + sub.icon + '</span><span class="s-name">' + sub.name + '</span><span class="s-count">' + sub.experiments.length + ' experiments</span>';
+  card.onclick = () => openSubject(i);
+  subjectListEl.appendChild(card);
+});
+
+function openDrawer() {
+  showSubjects();
+  document.getElementById('exp-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function showSubjects() {
+  document.getElementById('drawer-title').innerHTML = 'Subjects';
+  document.getElementById('subject-list-wrap').style.display = '';
+  document.getElementById('exp-list').style.display = 'none';
+  currentSubjectIdx = null;
+}
+
+function openSubject(idx) {
+  currentSubjectIdx = idx;
+  const sub = subjects[idx];
+  document.getElementById('drawer-title').innerHTML =
+    '<button class="drawer-back" onclick="showSubjects()">\u2190</button> ' + sub.name;
+  document.getElementById('subject-list-wrap').style.display = 'none';
+  const list = document.getElementById('exp-list');
+  list.style.display = '';
+  list.innerHTML = '';
+  sub.experiments.forEach((exp, i) => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    const num = String(i + 1).padStart(2, '0');
+    btn.innerHTML = '<span class="exp-num">' + num + '</span>' + exp.title.replace(/Experiment \d+ \u2014 /, '');
+    btn.onclick = () => openExp(i);
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+
+function closeDrawer() {
+  document.getElementById('exp-drawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeDrawerOutside(e) {
+  if (e.target === document.getElementById('exp-drawer')) closeDrawer();
+}
+
+function openExp(idx) {
+  closeDrawer();
+  const exp = subjects[currentSubjectIdx].experiments[idx];
+  document.getElementById('exp-page-title').textContent = exp.title;
+  let html = '';
+  if (exp.aim)    html += '<h2>Aim</h2><p>' + exp.aim + '</p>';
+  if (exp.theory) html += '<h2>Theory</h2><p>' + exp.theory + '</p>';
+  exp.sections.forEach(sec => {
+    html += '<h2>' + sec.heading + '</h2><div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre>' + escHtml(sec.content) + '</pre></div>';
+  });
+  if (exp.conclusion) html += '<h2>Conclusion</h2><p>' + exp.conclusion + '</p>';
+  document.getElementById('exp-page-body').innerHTML = html;
+  document.getElementById('exp-page').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePage() {
+  document.getElementById('exp-page').classList.remove('open');
+  document.body.style.overflow = '';
+  document.getElementById('exp-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  openSubject(currentSubjectIdx);
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyCode(btn) {
+  const code = btn.nextElementSibling.textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+</script>
+</body>
+</html>
